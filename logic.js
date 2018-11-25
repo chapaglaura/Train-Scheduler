@@ -25,24 +25,36 @@ $(document).ready(function () {
         var name = snapshot.val().name;
         var destination = snapshot.val().destination;
         var frequency = snapshot.val().frequency;
-        var arrival = snapshot.val().arrival;
-        var minutes = snapshot.val().minutes;
+        var first = snapshot.val().first;
+
+        console.log(name, destination, frequency, first);
+
+
+        var first_converted = moment(first, "HH:mm").subtract(1, "years");
+
+        var diff = moment().diff(moment(first_converted), 'minutes');
+
+        var minutes_remainder = diff % frequency;
+
+        var minutes_away = frequency - minutes_remainder;
+
+        var next = moment().add(minutes_away, 'minutes');
+
+        var arrival = moment(next).format('hh:mm a');
+        
+        
 
         namedata.text(name);
         destinationdata.text(destination);
         frequencydata.text(frequency);
         arrivaldata.text(arrival);
-        minutesdata.text(minutes);
+        minutesdata.text(minutes_away);
 
         row.append(namedata, destinationdata, frequencydata, arrivaldata, minutesdata);
 
         $("#trains-table > tbody").append(row);
 
     })
-    
-    setInterval(() => {
-        
-    }, 60000);
 
 
     $("#submitBtn").click(function (e) {
@@ -60,26 +72,14 @@ $(document).ready(function () {
         $("#frequency-input").val('');
 
 
-        var first_converted = moment(first, "HH:mm").subtract(1, "years");
-
-        var diff = moment().diff(first_converted, 'minutes');
-        
-        var minutes_away = diff % frequency;
-
-        var next = moment().add(minutes_away, 'minutes');
-
-        var arrival = moment(next).format('hh:mm a');
-
+        console.log(first);
 
         database.ref().push({
             name: name,
             destination: destination,
             frequency: frequency,
-            arrival: arrival,
-            minutes: minutes_away
-
+            first: first
         })
-
     });
 
 /*
