@@ -15,47 +15,24 @@ $(document).ready(function () {
 
 
     database.ref().on("child_added", function (snapshot) {
-        var row = $("<tr>");
-        var namedata = $("<td>");
-        var destinationdata = $("<td>");
-        var frequencydata = $("<td>");
-        var arrivaldata = $("<td>");
-        var minutesdata = $("<td>");
-
-        var name = snapshot.val().name;
-        var destination = snapshot.val().destination;
-        var frequency = snapshot.val().frequency;
-        var first = snapshot.val().first;
-
-        console.log(name, destination, frequency, first);
-
-
-        var first_converted = moment(first, "HH:mm").subtract(1, "years");
-
-        var diff = moment().diff(moment(first_converted), 'minutes');
-
-        var minutes_remainder = diff % frequency;
-
-        var minutes_away = frequency - minutes_remainder;
-
-        var next = moment().add(minutes_away, 'minutes');
-
-        var arrival = moment(next).format('hh:mm a');
-        
-        
-
-        namedata.text(name);
-        destinationdata.text(destination);
-        frequencydata.text(frequency);
-        arrivaldata.text(arrival);
-        minutesdata.text(minutes_away);
-
-        row.append(namedata, destinationdata, frequencydata, arrivaldata, minutesdata);
-
-        $("#trains-table > tbody").append(row);
-
+        createTable(snapshot);
     })
 
+    $('.time').text(moment().format('hh:mm:ss a'));
+
+    setInterval(() => {
+        $('.time').text(moment().format('hh:mm a'));
+        $("#trains-table > tbody").empty();
+        database.ref().once('value', function (snap) {
+            snap.forEach(function (childSnap) {
+             createTable(childSnap);
+            });
+           });
+    }, 60000);
+
+   
+
+    
 
     $("#submitBtn").click(function (e) {
 
@@ -71,9 +48,6 @@ $(document).ready(function () {
         $("#first-input").val('');
         $("#frequency-input").val('');
 
-
-        console.log(first);
-
         database.ref().push({
             name: name,
             destination: destination,
@@ -82,29 +56,41 @@ $(document).ready(function () {
         })
     });
 
-/*
-    var randomDate = "02/23/1999";
-    var randomFormat = "MM/DD/YYYY";
-    console.log(randomDate);
-    var convertedDate = moment(randomDate, randomFormat);
+function createTable(snapshot) {
+    var row = $("<tr>");
+        var namedata = $("<td>");
+        var destinationdata = $("<td>");
+        var frequencydata = $("<td>");
+        var arrivaldata = $("<td class='next'>");
+        var minutesdata = $("<td class='minutes'>");
 
-    randomDate = moment(randomDate, "MM/DD/YYYY");
-    console.log(convertedDate.format("YYYY/DD/MM"));
-    console.log(convertedDate.format("YYYY/MM/DD"));
-    console.log(convertedDate.format("DD/MM/YYYY"));
-    console.log(convertedDate.format("X"));
+        var name = snapshot.val().name;
+        var destination = snapshot.val().destination;
+        var frequency = snapshot.val().frequency;
+        var first = snapshot.val().first;
 
-    console.log(convertedDate.toNow());
-    console.log(moment().diff(convertedDate, "years"));
-    console.log(moment().diff(convertedDate, "months"));
-    console.log(moment().diff(convertedDate, "days"));
+        var first_converted = moment(first, "HH:mm").subtract(1, "years");
 
-    var newDate = moment("02/14/2001", randomFormat);
+        var diff = moment().diff(moment(first_converted), 'minutes');
 
-    console.log(newDate.diff(convertedDate, "days"));
-*/
+        var minutes_remainder = diff % frequency;
 
+        var minutes_away = frequency - minutes_remainder;
 
+        var next = moment().add(minutes_away, 'minutes');
+
+        var arrival = moment(next).format('hh:mm a');
+        
+        namedata.text(name);
+        destinationdata.text(destination);
+        frequencydata.text(frequency);
+        arrivaldata.text(arrival);
+        minutesdata.text(minutes_away);
+
+        row.append(namedata, destinationdata, frequencydata, arrivaldata, minutesdata);
+
+        $("#trains-table > tbody").append(row);
+}
 
 
 
